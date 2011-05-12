@@ -11,7 +11,9 @@
   		var defaults = {
             container_element : 'form',
             max_characters : 400,
-            validate : false // true for js validation          
+            validate : false, // true for js validation
+            submit_element : 'form', // the submit element, used for js validation
+            validation_error_output : function() { alert('Please fix the errors on the page before continuing.'); }
   		}
   		// merge options with defaults
   		var options = $.extend(defaults,options);
@@ -58,6 +60,14 @@
         	characterCounterObj.syncCounter();
         });                
 		
+		// validation
+		$(this.characterCounter.submit_element).bind('submit',function(e) {
+			var counter = characterCounterObj.characterCounter.counter_element;
+			if( counter.find('small').hasClass('error') ) {
+				characterCounterObj.characterCounter.validation_error_output();
+				e.preventDefault();
+			}
+		});
 		
        	return this;
    }
