@@ -13,7 +13,8 @@
             max_characters : 400,
             validate : false, // true for js validation
             submit_element : 'form', // the submit element, used for js validation
-            validation_error_output : function() { alert('Please fix the errors on the page before continuing.'); }
+            validation_error_output : function() { alert('Please fix the errors on the page before continuing.'); },
+            tiny_mce : false
   		}
   		// merge options with defaults
   		var options = $.extend(defaults,options);
@@ -21,7 +22,12 @@
         
         var getInputLength = function(jNode)
         {
-        	return parseInt(jNode.val().length);
+        	if( options.tiny_mce !== true ) {
+        		return parseInt(jNode.val().length);	
+        	} else if( jNode.length > 0 ) {
+        		return $(jNode[0].getContent()).text().length; // create dom elem to call text length
+        	}
+        	
         }                
 
         var setCounter = function(jNode,length)
@@ -50,9 +56,16 @@
 			// setup counter
 	        syncCounter(jNode);
 	        // bind keyup event to input
-	        jNode.bind('keyup',function() {
-	        	syncCounter(jNode);
-	        });                
+	        if( options.tiny_mce !== true ) {
+		        jNode.bind('keyup',function() {
+		        	syncCounter(jNode)
+		        });
+		    } else if( jNode.length > 0 ){
+		    	// tinymce bind
+		    	jNode[0].onKeyUp.add(function() {
+		    		syncCounter(jNode)
+		    	});
+		    }                
 			// set-up validation if necessary
 			if( options.validate === true ) {
 				// setup validation
