@@ -17,56 +17,59 @@
   		}
   		// merge options with defaults
   		var options = $.extend(defaults,options);
-        // create object
-		this.characterCounter = {};
-        $.extend(this.characterCounter,options);
+        var jsCharacterCounter = this;
         
-        this.getInputLength = function()
+        var getInputLength = function(jNode)
         {
-        	return parseInt(this.val().length);
+        	return parseInt(jNode.val().length);
         }                
 
-        this.characterCounter.setCounter = function(length)
+        var setCounter = function(jNode,length)
         {
-        	var small_text = this.counter_element.find('small'); 
-        	small_text.text(length + ' Character(s) of ' + this.max_characters + ' limit');
+        	var small_text = jNode.counter_element.find('small'); 
+        	small_text.text(length + ' Character(s) of ' + options.max_characters + ' limit');
         	// set overflow class
-        	if( parseInt(length) > parseInt(this.max_characters) ) {
+        	if( parseInt(length) > parseInt(options.max_characters) ) {
         		small_text.addClass('error');	
         	} else {
         		small_text.removeClass('error');
         	}
         }
         
-        this.syncCounter = function() {
-        	var value_length = this.getInputLength();
-        	this.characterCounter.setCounter(value_length);
+        var syncCounter = function(jNode) {
+        	var value_length = getInputLength(jNode);
+        	setCounter(jNode,value_length);
         }
         
-		// set-up validation if necessary
-		if( this.characterCounter.validate === true ) {
-			
+        this.setup = function(jNode) {
+			// encapsulate counter element
+	        jNode.counter_element = $('<div/>')
+	        											.attr('id','comment-char-counter')
+	        											.append($('<small/>').text('0 of ' + options.max_characters + ' limit'))
+	        											.appendTo($(options.container_element));
+			// setup counter
+	        syncCounter(jNode);
+	        // bind keyup event to input
+	        jNode.bind('keyup',function() {
+	        	syncCounter(jNode);
+	        });                
+			// set-up validation if necessary
+			if( options.validate === true ) {
+				// setup validation
+				$(options.submit_element).bind('submit',function(e) {
+					var counter = jNode.counter_element;
+					if( counter.find('small').hasClass('error') ) {
+						options.validation_error_output();
+						e.preventDefault();
+					}
+				});
+			}			
 		}
-		// encapsulate counter element
-        this.characterCounter.counter_element = $('<div/>')
-        											.attr('id','comment-char-counter')
-        											.append($('<small/>').text('0 of ' + this.characterCounter.max_characters + ' limit'))
-        											.appendTo($(this.characterCounter.container_element));
-        
-		characterCounterObj = this;
-        this.syncCounter();
-        // bind keyup event to input
-        this.bind('keyup',function() {
-        	characterCounterObj.syncCounter();
-        });                
 		
-		// validation
-		$(this.characterCounter.submit_element).bind('submit',function(e) {
-			var counter = characterCounterObj.characterCounter.counter_element;
-			if( counter.find('small').hasClass('error') ) {
-				characterCounterObj.characterCounter.validation_error_output();
-				e.preventDefault();
-			}
+		// 'this' is the jQuery object 
+		this.each(function() {
+			var jNode = $( this );
+			jsCharacterCounter.setup(jNode);
 		});
 		
        	return this;
